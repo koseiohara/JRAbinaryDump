@@ -1,0 +1,60 @@
+programmer : Kosei Ohara
+last update : 2024/Feb/20
+
+
+Test Environment
+	sun (tested on 2024/Feb/20)
+
+
+About this script
+	This script generates a binary file from JRA55 or JRA3Q with wgrib or wgrib2.
+	As of updated time, this script has two options : ALL date and time in the designated period or only DJF.
+	Generated binary file (hereafter OFILE) can be read by the Fortran direct access option.
+	This script also generate a new control file for the binary file.
+
+
+What this script do
+	First, a temporary file is generated from grib file at specific time with the wgrib or wgrib2 command.
+	Then, data in the temporary file is added to OFILE with cat command.
+	After that, rm command remove the temporary file.
+
+	This three step process is repeated for designated period.
+	If a file whose path and name are completely same as OFILE exist, the file is removed after execution.
+	If this script tried to read binary file and cannot find the file, this script generate a control file and stop immediately with
+	error messages.
+
+	Function MKCTL() read original control file of the dataset and generate new one for new binary file.
+	At that time, options, tdef, var are newly setted for the binary file and lines of index, comments, dtype are removed.
+	Number of tdef is counted when generating binary file and reflected for the control file.
+	If functions for reading grib files are commented out, number of tdef is setted as default value : 120000.
+
+
+Usage
+	You need to rewrite only some variables written in first 15 lines.
+
+	YEAR_INI :	the first year of the period
+	YEAR_FIN :	the last year of the period
+
+	DATA_DIR :	the directory that the dataset is stored.
+				For example, /mnt/sola2/global_data/JRA55_official/Grib/Daily/anl_p125 for JRA55 6hourly anl_p125_hgt.
+							 /mnt/ice09/JRA3Q/anl_p125 for JRA3Q 6hourly anl_p125_hgt.
+	TITLE	 :	The string to the left of the period in the grib file name.
+				For example, anl_p125_hgt for JRA3Q Geopotential Height data in anl_p125.
+	VAR		 :	Variable name displaied by "wgrib (grib filename)" for JRA55 or "wgrib2 (grib filename)" for JRA3Q.
+				Note that this is different from variable name written in control files.
+				For example, HGT for Geopotential Height data and UGRD for u-component data.
+	PERIOD	 :	ALL, DJF, MAM, JJA, and SON are available now.
+				If ALL, all data from YEAR_INI/01/01 to YEAR_FIN/12/31 is dumped in OFILE.
+				If DJF, only December, January, February data from YEAR_INI/12/01 to YEAR_FIN/02/28 (YEAR_FIN/02/29 if leap year) is
+				dumped in OFILE.
+	DATASET	 :	JRA55 or JRA3Q
+
+
+Outputs
+	OFILE and control file are generated in directory {DATASET}_{YEAR_INI}_{YEAR_FIN}.
+	If this directory does not exist, mkdir is executed.
+	Name of OFILE is        {DATASET}_{TITLE}_{YEAR_INI}_{YEAR_FIN}_{PERIOD}.bin
+	Name of control file is {DATASET}_{TITLE}_{YEAR_INI}_{YEAR_FIN}_{PERIOD}.ctl
+	You can change these names by changing definisions of OUTDIR, OFILE, and CTL_NEW.
+	Date and time when wgrib/wgrib2 command is executed and read file name are written in a log file.
+
